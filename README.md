@@ -1,66 +1,58 @@
-# 🛡️ Rapport technique – Cybersécurité
-# Sommaire
-## Contexte
-## Objectifs
-## Architecture
-## Tests réalisés
-## Recommandations
+# 📦 Ingest Pipeline – `pipeline-fleet-final-v1`
 
-[Nom de la section](Contexte-du-projet)
+## 🧾 Objectif
 
-
-## 📌 Contexte du projet
-Ce rapport présente les mesures de cybersécurité mises en œuvre dans le cadre du projet [Nom du projet], réalisé dans un environnement AWS. Il couvre les aspects liés à la protection des données, à la gestion des identités, et à la surveillance des ressources.
-## 🎯 Objectifs
-- Renforcer la sécurité des données stockées
-- Implémenter des mécanismes de contrôle d’accès
-- Assurer la traçabilité des actions
-- Tester la résilience des services
+Cette pipeline est utilisée pour **traiter les événements collectés par Elastic Agent via Fleet**, avant leur indexation dans Elasticsearch. Elle applique les transformations finales nécessaires à la normalisation, l’enrichissement ou le filtrage des données.
 
 ---
 
-## 🧩 Architecture de sécurité
+## 🧱 Nomenclature
 
-✅ Test de versioning réussi
+| Élément        | Valeur                  | Description                                      |
+|----------------|--------------------------|--------------------------------------------------|
+| Type           | `pipeline`               | Type d’objet Elasticsearch                       |
+| Source         | `fleet`                  | Origine des données (Elastic Agent via Fleet)    |
+| Fonction       | `final`                  | Étape finale de traitement avant indexation      |
+| Version        | `v1`                     | Version de la pipeline                           |
+| Nom complet    | `pipeline-fleet-final-v1`| Nom recommandé pour clarté et traçabilité        |
 
-✅ :white_check_mark: → ✅
+---
 
-🟢 :green_circle: → 🟢
+## ⚙️ Processors utilisés
 
-✔️ :heavy_check_mark: → ✔️
+Liste des transformations appliquées par la pipeline :
 
-Voici une phrase avec une note de bas de page[^1].
+| Ordre | Processor         | Description                                                                 |
+|-------|-------------------|-----------------------------------------------------------------------------|
+| 1     | `set`             | Ajoute ou modifie un champ spécifique                                       |
+| 2     | `rename`          | Renomme un champ pour correspondre au mapping cible                         |
+| 3     | `remove`          | Supprime les champs inutiles ou sensibles                                   |
+| 4     | `geoip` *(optionnel)* | Ajoute des données géographiques à partir d’une adresse IP (si activé)     |
+| 5     | `date` *(optionnel)*  | Convertit un champ texte en format date Elasticsearch                     |
 
-Une autre phrase avec une deuxième note[^2].
+> 💡 Pour voir la configuration exacte :
+> ```bash
+> GET _ingest/pipeline/.fleet_final_pipeline-1
+> ```
 
-[^1]: Ceci est le texte de la note de bas de page n°1.
-[^2]: Et voici la note de bas de page n°2.
+---
 
+## 🧪 Exemple d’usage
 
+Cette pipeline est automatiquement utilisée par les **data streams gérés par Fleet**, comme :
 
-## tableau & image 
-**Nom:** gerald 
+- `logs-system.*`
+- `logs-elastic_agent.*`
+- `metrics-system.*`
 
-| 🔐 Nom de la policy       | 🎯 Objectif principal                  | 📁 Ressource ciblée       | 🧑‍💻 Actions autorisées         | 🛡️ Type de policy | 📝 Commentaire |
-|--------------------------|----------------------------------------|---------------------------|-------------------------------|------------------|----------------|
-| `S3ReadOnlyPolicy`       | Lecture seule sur les buckets S3       | `arn:aws:s3:::*`          | `s3:GetObject`, `s3:ListBucket` | Managed AWS      | Utilisée pour les auditeurs |
-| `EC2AdminPolicy`         | Gestion complète des instances EC2     | `arn:aws:ec2:::*`         | `ec2:*`                        | Custom           | Réservée aux admins |
-| `LambdaInvokePolicy`     | Invocation des fonctions Lambda        | `arn:aws:lambda:::*`      | `lambda:InvokeFunction`        | Inline           | Attachée à un rôle spécifique |
-| `DenyS3DeletePolicy`     | Interdiction de suppression S3         | `arn:aws:s3:::data-bucket/*` | `s3:DeleteObject`           | Inline           | Utilisée pour protéger les logs |
-| `CloudTrailAuditPolicy`  | Accès aux logs CloudTrail              | `arn:aws:cloudtrail:::*`  | `cloudtrail:LookupEvents`      | Managed AWS      | Pour les analystes sécurité |
+---
 
-Sources : [Documentation IAM AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html)
+## 🛠️ Étapes pour renommer la pipeline
 
+Elasticsearch ne permet pas de renommer une pipeline directement. Voici comment procéder :
 
-
-
-```mermaid
-graph TD;
-    A[Start] --> B[sudo apt-get update ];
-
-
-
-
-
+1. **Exporter la configuration actuelle** :
+   ```bash
+   GET _ingest/pipeline/.fleet_final_pipeline-1
 
 
